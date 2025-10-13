@@ -1,0 +1,9 @@
+jupyterlab
+networkx
+numpy
+scipy
+matplotlib
+pandas
+tqdm
+ortools
+folium
