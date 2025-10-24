@@ -80,6 +80,10 @@ def astar_tsp(
         remaining = [d for d in delivery_indices if not (mask & (1 << delivery_to_bit[d]))]
         if heuristic == "mst":
             return heuristic_mst(current, remaining, dist_matrix, depot_index)
+        if heuristic == "sum":
+            if not remaining:
+                return float(dist_matrix[current, depot_index])
+            return float(sum(dist_matrix[current, r] for r in remaining))
         # Simple fallback: sum of nearest distances (fast, not always admissible)
         if not remaining:
             return float(dist_matrix[current, depot_index])

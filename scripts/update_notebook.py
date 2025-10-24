@@ -53,6 +53,22 @@ print("One optimal tour:", labels_from_order(optimal_orders[0]))
 """.strip()
 
 
+def ensure_win_loop_cell(nb):
+    # Insert WindowsSelectorEventLoopPolicy early to avoid RuntimeWarning on Windows
+    code = (
+        "import sys, asyncio\n"
+        "if sys.platform.startswith('win'):\n"
+        "    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())\n"
+    )
+    for c in nb.cells:
+        if c.cell_type == "code" and "WindowsSelectorEventLoopPolicy" in (c.source or ""):
+            return False
+    # Insert right after the title markdown (index 1) if exists
+    insert_idx = 1 if nb.cells and nb.cells[0].cell_type == "markdown" else 0
+    nb.cells.insert(insert_idx, nbf.v4.new_code_cell(code))
+    return True
+
+
 def ensure_validation_cell(nb):
     # Add validation cell after A* run cell if not present
     inserted = False
@@ -78,13 +94,11 @@ def enhance_visualization(nb):
             continue
         src = c.source or ""
         if "plt.title('A* MST Tour')" in src:
-            # Update title to include cost
             src = src.replace(
                 "plt.title('A* MST Tour')",
                 "plt.title(f'A* MST Tour (cost={total_cost:.3f})')",
             )
             changed = True
-        # Add depot highlight if drawing call exists and not already added
         if "nx.draw(G, pos" in src and "draw_networkx_nodes" not in src:
             src = src.replace(
                 "nx.draw(G, pos, with_labels=False, node_color='lightblue', node_size=600)",
@@ -99,7 +113,6 @@ def enhance_visualization(nb):
 def add_missing_ids(nb):
     changed = False
     for c in nb.cells:
-        # nbformat stores cell id under key 'id'
         if not getattr(c, 'id', None):
             c['id'] = uuid.uuid4().hex
             changed = True
@@ -126,13 +139,15 @@ def fix_root_cell(nb):
 
 def main():
     nb = nbf.read(NOTEBOOK_PATH, as_version=4)
+    win_loop_added = ensure_win_loop_cell(nb)
     ids_added = add_missing_ids(nb)
     root_fixed = fix_root_cell(nb)
     v_added = ensure_validation_cell(nb)
     vis_changed = enhance_visualization(nb)
-    if ids_added or root_fixed or v_added or vis_changed:
+    if win_loop_added or ids_added or root_fixed or v_added or vis_changed:
         nbf.write(nb, NOTEBOOK_PATH)
         print("Notebook updated:", {
+            "win_loop_added": win_loop_added,
             "ids_added": ids_added,
             "root_fixed": root_fixed,
             "validation_cell_added": v_added,

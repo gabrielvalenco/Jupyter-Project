@@ -52,6 +52,11 @@ pip install jupyterlab networkx numpy scipy matplotlib pandas tqdm ortools foliu
   - Stronger bound using degree penalties and a 1-tree relaxation; consider for harder instances.
 - Simple Straight-Line Fallback:
   - e.g., sum of Euclidean/Manhattan distances from remaining points; fast but may not be strictly admissible.
+- Sum of remaining distances ("sum"):
+  - `h = sum(dist_matrix[current, r] for r in remaining)`; if `remaining` is empty, use `dist_matrix[current, depot]`.
+  - Very fast; informative for clustered points. In arbitrary road networks, it may not be strictly admissible, so prefer `mst` when optimality guarantees are needed.
+  - Usage (Python): `from src.route_solver import astar_tsp; path, cost = astar_tsp(dist_matrix, depot_index, delivery_indices, heuristic="sum")`.
+  - Usage (Notebook): set `heuristic="sum"` in the solver cell.
 
 ## Notebook Structure
 - `01_problem_and_data.ipynb` — define inputs and parse CSV/JSON.
