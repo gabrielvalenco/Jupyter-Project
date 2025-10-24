@@ -1,4 +1,13 @@
 jupyterlab
+ipykernel
+networkx
+numpy
+scipy
+matplotlib
+pandas
+tqdm
+ortools
+foliumjupyterlab
 networkx
 numpy
 scipy
