@@ -1,4 +1,5 @@
 import nbformat as nbf
+import uuid
 
 NOTEBOOK_PATH = r"notebooks/DeliveryAStar.ipynb"
 
@@ -95,13 +96,45 @@ def enhance_visualization(nb):
     return changed
 
 
+def add_missing_ids(nb):
+    changed = False
+    for c in nb.cells:
+        # nbformat stores cell id under key 'id'
+        if not getattr(c, 'id', None):
+            c['id'] = uuid.uuid4().hex
+            changed = True
+    return changed
+
+
+def fix_root_cell(nb):
+    desired = (
+        "import sys\n"
+        "from pathlib import Path\n"
+        "ROOT = Path.cwd().resolve()\n"
+        "if not (ROOT / 'src').exists():\n"
+        "    ROOT = ROOT.parent\n"
+        "if str(ROOT) not in sys.path:\n"
+        "    sys.path.append(str(ROOT))\n"
+        "print('Python:', sys.executable)\n"
+    )
+    for c in nb.cells:
+        if c.cell_type == "code" and c.source and "from pathlib import Path" in c.source and "ROOT =" in c.source:
+            c.source = desired
+            return True
+    return False
+
+
 def main():
     nb = nbf.read(NOTEBOOK_PATH, as_version=4)
+    ids_added = add_missing_ids(nb)
+    root_fixed = fix_root_cell(nb)
     v_added = ensure_validation_cell(nb)
     vis_changed = enhance_visualization(nb)
-    if v_added or vis_changed:
+    if ids_added or root_fixed or v_added or vis_changed:
         nbf.write(nb, NOTEBOOK_PATH)
         print("Notebook updated:", {
+            "ids_added": ids_added,
+            "root_fixed": root_fixed,
             "validation_cell_added": v_added,
             "visualization_enhanced": vis_changed,
         })

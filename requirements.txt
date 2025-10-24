@@ -1,13 +1,6 @@
 jupyterlab
 ipykernel
-networkx
-numpy
-scipy
-matplotlib
-pandas
-tqdm
-ortools
-foliumjupyterlab
+nbformat
 networkx
 numpy
 scipy
